@@ -1,20 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wanderstay</title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
+<% layout('/layouts/boilerplate') -%>
+<body>  
+    <br>
     <h3>All Listing</h3>
-    <form method="GET" action="/listings/new">
-        <button>Create New Listing</button>
-    </form>
-    <ul>
+    <br>
+    <div class="row row-cols-lg-3 row-cols-md-3 row-cols-sm-1">
         <% for(listing of allListings) { %>
-            <li><a href="/listings/<%= listing._id %>"><%= listing.title %></a></li>
+            <a href="/listings/<%= listing._id %>" class="listing-link">
+                <div class="card col">
+                    <img src="<%= listing.image %>" class="card-img-top" alt="listing image" style="height: 20rem">
+                    <div class="card-img-overlay"></div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <b><%= listing.title %></b><br>
+                            &#2547; <%= listing.price.toLocaleString("en-BN") %> / month
+                        </p>
+                    </div>
+                </div>
+            </a>
         <% } %>
-    </ul>
+    </div>
+    <br>
 </body>
-</html>
