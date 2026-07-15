@@ -7,6 +7,7 @@ const ejsMate = require("ejs-mate");
 const path = require("path");
 const wrapAsync = require("./utils/wrapAsync");
 const ExpressError = require("./utils/ExpressError");
+const {listingSchema} = require("./schema");
 const app = express();
 
 // middlewares and setup
@@ -53,8 +54,9 @@ app.get("/listings/new", (req, res) => {
 app.post(
     "/listings",
     wrapAsync(async (req, res, next) => {
-        if (!req.body.listing) {
-            throw new ExpressError(400, "Send Valid Data For Listing");
+        let result = listingSchema.validate(req.body);
+        if(result.error) {
+            throw new ExpressError(400, result.error);
         }
         const newListing = new Listing(req.body.listing);
         await newListing.save();
@@ -77,13 +79,10 @@ app.patch(
     "/listings/:id",
     wrapAsync(async (req, res) => {
         let { id } = req.params;
-        if (!req.body.listing) {
+        if (!req.body?.listing) {
             throw new ExpressError(400, "Send Valid Data For Listing");
         }
-        const newListing = req.body.listing;
-        const result = await Listing.updateOne({ _id: id }, newListing, {
-            new: true,
-        });
+        const result = await Listing.updateOne({ _id: id }, req.body.listing);
         res.redirect(`/listings`);
     }),
 );
@@ -115,7 +114,8 @@ app.use((req, res, next) => {
 // error handler middleware
 app.use((err, req, res, next) => {
     const { status = 500, message = "Some Error" } = err;
-    res.status(status).send(message);
+    res.status(status).render("error.ejs", {err});
+    // res.status(status).send(message);
 });
 
 // server listening
