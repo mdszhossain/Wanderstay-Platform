@@ -7,7 +7,7 @@ const ejsMate = require("ejs-mate");
 const path = require("path");
 const wrapAsync = require("./utils/wrapAsync");
 const ExpressError = require("./utils/ExpressError");
-const {listingSchema} = require("./schema");
+const { listingSchema } = require("./schema");
 const app = express();
 
 // middlewares and setup
@@ -16,6 +16,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public/css")));
 app.use(express.static(path.join(__dirname, "public/js")));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 
@@ -37,6 +38,18 @@ app.get("/", (req, res) => {
     res.send("Hi! I am root");
 });
 
+// validation for schema using middleware
+const validateListing = (req, res, next) => {
+    let result = listingSchema.validate(req.body);
+    let {error} = result;
+    if (error) {
+        let errMsg = error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, error);
+    } else {
+        next();
+    }
+};
+
 // Index Route
 app.get(
     "/listings",
@@ -52,12 +65,9 @@ app.get("/listings/new", (req, res) => {
 });
 
 app.post(
-    "/listings",
+    "/listings", validateListing,
     wrapAsync(async (req, res, next) => {
-        let result = listingSchema.validate(req.body);
-        if(result.error) {
-            throw new ExpressError(400, result.error);
-        }
+        console.log(req.body);
         const newListing = new Listing(req.body.listing);
         await newListing.save();
         res.redirect("/listings");
@@ -76,12 +86,9 @@ app.get(
 
 // Update Route
 app.patch(
-    "/listings/:id",
+    "/listings/:id", validateListing,
     wrapAsync(async (req, res) => {
         let { id } = req.params;
-        if (!req.body?.listing) {
-            throw new ExpressError(400, "Send Valid Data For Listing");
-        }
         const result = await Listing.updateOne({ _id: id }, req.body.listing);
         res.redirect(`/listings`);
     }),
@@ -114,7 +121,7 @@ app.use((req, res, next) => {
 // error handler middleware
 app.use((err, req, res, next) => {
     const { status = 500, message = "Some Error" } = err;
-    res.status(status).render("error.ejs", {err});
+    res.status(status).render("error.ejs", { err });
     // res.status(status).send(message);
 });
 
