@@ -7,7 +7,7 @@ const ejsMate = require("ejs-mate");
 const path = require("path");
 const wrapAsync = require("./utils/wrapAsync");
 const ExpressError = require("./utils/ExpressError");
-const { listingSchema } = require("./schema");
+const { listingSchema, reviewSchema } = require("./schema");
 const Review = require("./models/review");
 const app = express();
 
@@ -41,7 +41,20 @@ app.get("/", (req, res) => {
 
 // validation for schema using middleware
 const validateListing = (req, res, next) => {
+  req.body = req.body || {};
   let result = listingSchema.validate(req.body);
+  let { error } = result;
+  if (error) {
+    let errMsg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(400, errMsg);
+  } else {
+    next();
+  }
+};
+
+const validateReview = (req, res, next) => {
+  req.body = req.body || {};
+  let result = reviewSchema.validate(req.body);
   let { error } = result;
   if (error) {
     let errMsg = error.details.map((el) => el.message).join(",");
@@ -69,6 +82,7 @@ app.post(
   "/listings",
   validateListing,
   wrapAsync(async (req, res, next) => {
+    req.body = req.body || {};
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect("/listings");
@@ -110,9 +124,12 @@ app.delete(
 // POST route
 app.post(
   "/listings/:id/reviews",
+  validateReview,
   wrapAsync(async (req, res) => {
     const { id } = req.params;
     let listing = await Listing.findById(id);
+    console.log(listing);
+    req.body = req.body || {};
     let newReview = new Review(req.body.review);
     listing.reviews.push(newReview);
     await newReview.save();
