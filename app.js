@@ -44,7 +44,7 @@ const validateListing = (req, res, next) => {
     let {error} = result;
     if (error) {
         let errMsg = error.details.map((el) => el.message).join(",");
-        throw new ExpressError(400, error);
+        throw new ExpressError(400, errMsg);
     } else {
         next();
     }
@@ -67,7 +67,6 @@ app.get("/listings/new", (req, res) => {
 app.post(
     "/listings", validateListing,
     wrapAsync(async (req, res, next) => {
-        console.log(req.body);
         const newListing = new Listing(req.body.listing);
         await newListing.save();
         res.redirect("/listings");
