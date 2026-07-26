@@ -6,6 +6,8 @@ const ejsMate = require("ejs-mate");
 const path = require("path");
 const ExpressError = require("./utils/ExpressError");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const flash = require("connect-flash");
 const app = express();
 
 const listings = require("./routes/listing");
@@ -21,6 +23,18 @@ app.use(express.json());
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(cookieParser("secretcode"));
+const sessionOptions = {
+    secret: "mysupersecretstring",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+    },
+}
+app.use(session(sessionOptions));
+app.use(flash());
 
 // database connection
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderstay";
@@ -35,34 +49,25 @@ async function main() {
     await mongoose.connect(MONGO_URL);
 }
 
+app.use((req, res, next) => {
+    res.locals.successMsg = req.flash("success");
+    next();
+});
+
 app.use("/listings", listings);
 app.use("/listings/:id/reviews", reviews);
-
-app.get("/getcookies", (req, res) => {
-    res.cookie("greet", "Assalamualaikum");
-    res.cookie("madeIn", "Bangladesh");
-    res.send("sent you some cookie");
+app.use((req, res, next) => {
+    res.locals.successMsg = req.flash("success");
+    res.locals.errorMsg = req.flash("error");
+    next();
 });
 
-app.get("/greet", (req, res) => {
-    let {name = "anonymous"} = req.cookies;
-    res.send(`Hi!, ${name}`);
-})
 
-app.get("/getsignedcookies", (req, res) => {
-    res.cookie("name", "shazzad", {signed: true});
-    res.send("signed cookies sent");
-});
-
-app.get("/verify", (req, res) => {
-    console.log(req.signedCookies);
-    res.send("Verified");
-})
 
 // root endpoint
 app.get("/", (req, res) => {
     console.dir(req.cookies);
-    res.send("Hi! I am root");
+    res.redirect("/listings");
 });
 
 app.use((req, res, next) => {
