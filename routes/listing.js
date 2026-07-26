@@ -33,6 +33,20 @@ router.get("/new", (req, res) => {
   res.render("listings/new.ejs");
 });
 
+// show route
+router.get(
+  "/:id",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    const listing = await Listing.findById(id).populate("reviews");
+    if (!listing) {
+      req.flash("error", "Listing Unavailable!");
+      return res.redirect("/listings");
+    }
+    res.render("listings/show.ejs", { listing });
+  }),
+);
+
 router.post(
   "/",
   validateListing,
@@ -51,6 +65,10 @@ router.get(
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     const listing = await Listing.findById(id);
+    if(!listing) {
+      req.flash("error", "Listing Unavailable for Edit!");
+      return res.redirect("/listings");
+    }
     res.render("listings/edit.ejs", { listing });
   }),
 );
@@ -78,14 +96,6 @@ router.delete(
   }),
 );
 
-// show route
-router.get(
-  "/:id",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const listing = await Listing.findById(id).populate("reviews");
-    res.render("listings/show.ejs", { listing });
-  }),
-);
+
 
 module.exports = router
