@@ -8,10 +8,14 @@ const ExpressError = require("./utils/ExpressError");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user");
 const app = express();
 
-const listings = require("./routes/listing");
-const reviews = require("./routes/review");
+const listingRouter = require("./routes/listing");
+const reviewRouter = require("./routes/review");
+const userRouter = require("./routes/user");
 
 // middlewares and setup
 app.set("view engine", "ejs");
@@ -32,7 +36,7 @@ const sessionOptions = {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
     },
-}
+};
 app.use(session(sessionOptions));
 app.use(flash());
 
@@ -49,27 +53,25 @@ async function main() {
     await mongoose.connect(MONGO_URL);
 }
 
+// implementing passport
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// implementing connect-flash
 app.use((req, res, next) => {
     res.locals.successMsg = req.flash("success");
     res.locals.errorMsg = req.flash("error");
     next();
 });
 
-app.use("/listings", listings);
-app.use("/listings/:id/reviews", reviews);
-app.use((req, res, next) => {
-    res.locals.successMsg = req.flash("success");
-    res.locals.errorMsg = req.flash("error");
-    next();
-});
+// pointing to different routes
+app.use("/listings", listingRouter);
+app.use("/listings/:id/reviews", reviewRouter);
+app.use("/", userRouter);
 
-
-
-// root endpoint
-app.get("/", (req, res) => {
-    console.dir(req.cookies);
-    res.redirect("/listings");
-});
 
 app.use((req, res, next) => {
     throw new ExpressError(404, "Page Not Found");
