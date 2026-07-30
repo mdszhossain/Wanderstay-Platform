@@ -4,6 +4,7 @@ const wrapAsync = require("../utils/wrapAsync");
 const { listingSchema } = require("../schema");
 const ExpressError = require("../utils/ExpressError");
 const Listing = require("../models/listing");
+const {isLoggedin} = require('../middleware');
 
 
 // validation for schema using middleware
@@ -29,7 +30,9 @@ router.get(
 );
 
 // New Route
-router.get("/new", (req, res) => {
+router.get("/new", 
+  isLoggedin,
+  (req, res) => {
   res.render("listings/new.ejs");
 });
 
@@ -62,6 +65,7 @@ router.post(
 // Edit Route
 router.get(
   "/:id/edit",
+  isLoggedin,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     const listing = await Listing.findById(id);
@@ -77,6 +81,7 @@ router.get(
 router.patch(
   "/:id",
   validateListing,
+  isLoggedin,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     const result = await Listing.updateOne({ _id: id }, req.body.listing);
@@ -88,6 +93,7 @@ router.patch(
 // Delete Route
 router.delete(
   "/:id",
+  isLoggedin,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     let deletedListing = await Listing.findByIdAndDelete(id);
