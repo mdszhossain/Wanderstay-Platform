@@ -4,39 +4,14 @@ const User = require("../models/user");
 const wrapAsync = require("../utils/wrapAsync");
 const review = require("../models/review");
 const passport = require("passport");
-const {redirectPage} = require("../middleware");
+const { redirectPage } = require("../middleware");
+const userController = require("../controllers/users");
 
-router.get("/signup", (req, res) => {
-    res.render("users/signup.ejs");
-});
+router.get("/signup", userController.renderSignupForm);
 
-router.post(
-    "/signup",
-    wrapAsync(async (req, res, next) => {
-        try {
-            let { username, email, password } = req.body;
-            const newUser = new User({ email, username });
-            const registeredUser = await User.register(newUser, password);
-            req.login(registeredUser, (err) => {
-                if (err) {
-                    return next(err);
-                }
-                req.flash("success", "user registered successfully");
-                return res.redirect("/listings");
-            });
-        } catch (e) {
-            req.flash("error", e.message);
-            res.redirect("/signup");
-        }
-    }),
-);
+router.post("/signup", wrapAsync(userController.signup));
 
-router.get(
-    "/login",
-    wrapAsync(async (req, res) => {
-        res.render("users/login.ejs");
-    }),
-);
+router.get("/login", wrapAsync(userController.renderLoginForm));
 
 router.post(
     "/login",
@@ -45,23 +20,9 @@ router.post(
         failureRedirect: "/login",
         failureFlash: true,
     }),
-    wrapAsync(async (req, res) => {
-        req.flash("success", "welcome back to wanderlust");
-        res.redirect(res.locals.redirectUrl || 'listings');
-    }),
+    wrapAsync(userController.login),
 );
 
-router.get(
-    "/logout",
-    wrapAsync(async (req, res, next) => {
-        req.logout((err) => {
-            if(err) {
-                next(err);
-            }
-            req.flash('success', 'logged out user');
-            res.redirect('/listings');
-        })
-    }),
-);
+router.get("/logout", wrapAsync(userController.logout));
 
 module.exports = router;

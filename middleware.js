@@ -2,6 +2,7 @@ const Listing = require('./models/listing');
 const Review = require('./models/review');
 const ExpressError = require('./utils/ExpressError');
 const { listingSchema, reviewSchema } = require("./schema");
+const review = require('./models/review');
 
 
 module.exports.isLoggedin = (req, res, next) => {
@@ -31,8 +32,8 @@ module.exports.isOwner = async (req, res, next) => {
 }
 module.exports.isReviewAuthor = async (req, res, next) => {
     let { id, reviewId } = req.params;
-    let listing = await Review.findById(id);
-    if(!review.author._id.equals(res.locals.currentUser._id)) {
+    let review = await Review.findById(reviewId);
+    if(!(review.author._id.equals(res.locals.currentUser._id))) {
       req.flash('error', 'you are not the author of this review');
       return res.redirect(`/listings/${id}`);
     }
