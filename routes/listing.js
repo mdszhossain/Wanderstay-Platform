@@ -6,16 +6,32 @@ const { isLoggedin, isOwner, validateListing } = require("../middleware");
 
 const listingController = require("../controllers/listings");
 
-// Index Route
-router.get("/", wrapAsync(listingController.index));
+router
+    .route("/")
+    .get(wrapAsync(listingController.index))
+    .post(
+        isLoggedin,
+        validateListing,
+        wrapAsync(listingController.createListing),
+    );
+
+router
+    .route("/:id")
+    .get(wrapAsync(listingController.showListing))
+    .patch(
+        isLoggedin,
+        isOwner,
+        validateListing,
+        wrapAsync(listingController.updateListing),
+    )
+    .delete(
+        isLoggedin,
+        isOwner,
+        wrapAsync(listingController.destroyListing),
+    );
 
 // New Route
 router.get("/new", isLoggedin, listingController.renderNewForm);
-
-// show route
-router.get("/:id", wrapAsync(listingController.showListing));
-
-router.post("/", validateListing, wrapAsync(listingController.createListing));
 
 // Edit Route
 router.get(
@@ -23,23 +39,6 @@ router.get(
     isLoggedin,
     isOwner,
     wrapAsync(listingController.renderEditForm),
-);
-
-// Update Route
-router.patch(
-    "/:id",
-    isLoggedin,
-    isOwner,
-    validateListing,
-    wrapAsync(listingController.updateListing),
-);
-
-// Delete Route
-router.delete(
-    "/:id",
-    isLoggedin,
-    isOwner,
-    wrapAsync(listingController.destroyListing),
 );
 
 module.exports = router;

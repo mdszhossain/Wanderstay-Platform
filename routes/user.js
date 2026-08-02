@@ -7,21 +7,22 @@ const passport = require("passport");
 const { redirectPage } = require("../middleware");
 const userController = require("../controllers/users");
 
-router.get("/signup", userController.renderSignupForm);
+router
+    .route("/signup")
+    .get(userController.renderSignupForm)
+    .post(wrapAsync(userController.signup));
 
-router.post("/signup", wrapAsync(userController.signup));
-
-router.get("/login", wrapAsync(userController.renderLoginForm));
-
-router.post(
-    "/login",
-    redirectPage,
-    passport.authenticate("local", {
-        failureRedirect: "/login",
-        failureFlash: true,
-    }),
-    wrapAsync(userController.login),
-);
+router
+    .route("/login")
+    .get(wrapAsync(userController.renderLoginForm))
+    .post(
+        redirectPage,
+        passport.authenticate("local", {
+            failureRedirect: "/login",
+            failureFlash: true,
+        }),
+        wrapAsync(userController.login),
+    );
 
 router.get("/logout", wrapAsync(userController.logout));
 
