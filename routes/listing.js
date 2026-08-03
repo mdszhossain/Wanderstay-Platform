@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync");
 const Listing = require("../models/listing");
+const multer = require("multer");
+const upload = multer({dest: "uploads/"})
 const { isLoggedin, isOwner, validateListing } = require("../middleware");
 
 const listingController = require("../controllers/listings");
@@ -9,12 +11,16 @@ const listingController = require("../controllers/listings");
 router
     .route("/")
     .get(wrapAsync(listingController.index))
-    .post(
-        isLoggedin,
-        validateListing,
-        wrapAsync(listingController.createListing),
-    );
+    .post(upload.single("listing[image]"), (req, res) => {
+        res.send(req.file);
+    })
+    // .post(
+    //     isLoggedin,
+    //     validateListing,
+    //     wrapAsync(listingController.createListing),
+    // );
 
+    router.get("/new", isLoggedin, listingController.renderNewForm);
 router
     .route("/:id")
     .get(wrapAsync(listingController.showListing))
@@ -31,7 +37,6 @@ router
     );
 
 // New Route
-router.get("/new", isLoggedin, listingController.renderNewForm);
 
 // Edit Route
 router.get(
