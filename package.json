@@ -11,8 +11,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "cloudinary": "^2.10.0",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "ejs-mate": "^3.0.0",
     "express": "^5.2.1",
@@ -21,6 +23,7 @@
     "method-override": "^3.0.0",
     "mongoose": "^9.7.3",
     "multer": "^2.2.0",
+    "multer-storage-cloudinary": "^4.0.0",
     "nodemon": "^3.1.14",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
